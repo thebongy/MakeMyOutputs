@@ -9,10 +9,37 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 FONT = 'Courier New'
 SIZE = Pt(11)
-TOP = 0.3
-BOTTOM = 0.3
-LEFT = 0.7
-RIGHT = 0.7
+TOP = Inches(0.5)
+BOTTOM = Inches(1.5)
+LEFT = Inches(0.7)
+RIGHT = Inches(0.7)
+
+INPUT_SNIPPET = '''
+
+__oldRawInput__ = raw_input
+def raw_input(prompt):
+    result = __oldRawInput__(prompt+'\\n')
+    print result
+    return result
+
+'''
+
+PRINT_SNIPPET = '''
+
+import sys
+_stdout = sys.stdout # Keeping a copy of sys.stdout
+
+class OutStream(object):
+    def __init__(self, target):
+        self.target = target
+    
+    def write(self,s):
+        self.target.write(s)
+        self.target.flush() # Ensuring Output is always flushed!!
+
+sys.stdout = OutStream(sys.stdout)
+
+'''
 
 if os.name == 'nt':
     PYTHON='C:\Python27\python.exe'
@@ -42,16 +69,24 @@ the output shown will be written to the word file simultaneously. If you make a 
 while running a file, don't worry, you will be asked for the option of re-running the 
 file in the end, and erasing your old output.
 
-Note: Ensure that all your raw_input() prompt messages end with a '\\n' or output may not 
-format correctly near raw_input() statements!!!!
+Notes:
+
 '''
+
+command = PYTHON + ' ' + 'temp.py'
 
 for f in FILES:
     print '____________________ Running ' + f + '.py'
-    f_name = PYTHON + ' -u ' + os.path.join(DIR,f+'.py')
-    done = False
-    while not done:
-        proc = subprocess.Popen(f_name,
+    f_path = os.path.join(DIR,f+'.py')
+    done = 'y'
+    while done.lower() == 'y':
+        temp = open('temp.py','w')
+        temp.write(PRINT_SNIPPET)
+        temp.write(INPUT_SNIPPET)
+        temp.write(open(f_path).read())
+        temp.close()
+
+        proc = subprocess.Popen(command,
         shell=True,
         stdin = sys.stdin,
         stdout = subprocess.PIPE)
@@ -63,12 +98,8 @@ for f in FILES:
             output += data
         
         output+=proc.communicate()[0]
-        print '____________________ File Execution Complete
+        print '____________________ File Execution Complete'
         done = raw_input('Would you like to rerun the file? (y for yes, n for no)')
-        if done.lower()=='y':
-            done=True
-        else:
-            done=False
 
     prog_p = document.add_paragraph()
     prog_r = prog_p.add_run(output)
