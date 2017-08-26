@@ -65,6 +65,10 @@ for f in FILES:
         output+=proc.communicate()[0]
         print '____________________ File Execution Complete
         done = raw_input('Would you like to rerun the file? (y for yes, n for no)')
+        if done.lower()=='y':
+            done=True
+        else:
+            done=False
 
     prog_p = document.add_paragraph()
     prog_r = prog_p.add_run(output)
