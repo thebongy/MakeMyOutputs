@@ -72,7 +72,7 @@ for f in FILES:
     prog_font.name = FONT
     prog_font.size = SIZE
 
-section = document.sections
+sections = document.sections
 for section in sections:
     section.top_margin = TOP
     section.bottom_margin = BOTTOM
