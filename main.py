@@ -5,7 +5,7 @@ __status__ = 'Development'
 import subprocess,os,sys
 from docx import Document
 from docx.shared import Pt,Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH,WD_UNDERLINE
 
 FONT = 'Courier New'
 SIZE = Pt(11)
@@ -19,7 +19,7 @@ INPUT_SNIPPET = '''
 __oldRawInput__ = raw_input
 def raw_input(prompt):
     result = __oldRawInput__(prompt+'\\n')
-    print result
+    print '{{DEBUG[INPUT]}}',result
     return result
 
 '''
@@ -62,6 +62,11 @@ head_r = head_p.add_run(heading)
 head_font = head_r.font
 head_font.name = FONT
 head_font.size = SIZE
+head_font.bold = True
+head_font.underline = WD_UNDERLINE.SINGLE
+
+i = int(raw_input('Enter Starting Q no to show in output file'))
+
 
 print '_______________________'
 print '''Now the program will attempt to execute your files one by one. Note that
@@ -70,8 +75,11 @@ while running a file, don't worry, you will be asked for the option of re-runnin
 file in the end, and erasing your old output.
 
 Notes:
-
+1. Ignore the lines with {{DEBUG[INPUT]}}. These are used by the program
+to format your input statements. These will not appear in the output file.
+2. The current verion does not support the usage of the __future__module.
 '''
+raw_input('Press Enter to Continue.......')
 
 command = PYTHON + ' ' + 'temp.py'
 
@@ -90,7 +98,7 @@ for f in FILES:
         shell=True,
         stdin = sys.stdin,
         stdout = subprocess.PIPE)
-        output = f+')\n'
+        output = ''
 
         while proc.poll() == None:
             data = proc.stdout.readline()
@@ -100,12 +108,26 @@ for f in FILES:
         output+=proc.communicate()[0]
         print '____________________ File Execution Complete'
         done = raw_input('Would you like to rerun the file? (y for yes, n for no)')
-
+    
+    output = output.splitlines()
     prog_p = document.add_paragraph()
-    prog_r = prog_p.add_run(output)
-    prog_font = prog_r.font
-    prog_font.name = FONT
-    prog_font.size = SIZE
+    prog_p.add_run(str(i)+')'+'\n').font.bold = True
+    i += 1
+
+    for line in output:
+        bold = False
+        if line.startswith('{{DEBUG[INPUT]}}'):
+            bold = True
+            line = line.replace('{{DEBUG[INPUT]}}','(Input)')
+        line_r = prog_p.add_run(line + '\n')
+        
+        line_font = line_r.font
+        
+        if bold:
+            line_font.bold = True
+        
+        line_font.name = FONT
+        line_font.size = SIZE
 
 sections = document.sections
 for section in sections:

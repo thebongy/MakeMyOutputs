@@ -2,3 +2,5 @@ Code/
 *.docx
 tags
 temp.py
+*.txt
+*.dat
